@@ -4,6 +4,7 @@ import typing
 
 from .exceptions import PageNotLoadedError, InvalidWidgetIndexError
 
+type InPageWidgetsList = list[InPageWidget,]
 def dynamic_pages_switching(func):
     """
     Wrapper of the 'PagesWidgetsHandler.switch_to_page' method\n
@@ -38,7 +39,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         parent: QtWidgets.QWidget|None, 
         max_loadables_pages_count: int, 
         widgets_by_page_count: int, 
-        widgets: list[InPageWidget],
+        widgets: InPageWidgetsList,
         **config,
         ):
         super().__init__(parent)
@@ -61,7 +62,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.loaded_pages = []
         self.pages_switch_history = []
         
-        self.setObjectName("pages_widgets_handler")
         self.fixed_size_policy = QtWidgets.QSizePolicy()
         self.main_lyt = QtWidgets.QGridLayout()
         self.setLayout(self.main_lyt)
