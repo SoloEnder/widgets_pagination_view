@@ -47,7 +47,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         #Assigning arguments to attr
         self.widgets_by_page_count = widgets_by_page_count
         self.max_loadables_pages_count = max_loadables_pages_count
-        self.widgets = widgets
+        self._widgets = widgets
         self.config = config
         
         #Setup logger
@@ -115,7 +115,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         for page_data in self.pages_data:
             self.pages_virtual_row.append(None)
         
-    def set_widgets(self, widgets: list[InPageWidget]):
+    def set_widgets(self, widgets: InPageWidgetsList):
         """
         Set the attribute 'widgets' to 'widgets'
         """
@@ -124,7 +124,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             self.remove_page(page_data[0])
             
         self.pages_switch_history.clear()
-        self.widgets = widgets
+        self._widgets = widgets
         self.generate_pages()
         
     def delete_widget(self, widget: InPageWidget, destroy: bool=True):
@@ -135,9 +135,9 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
         if isinstance(widget.index, int):
             self.logger.debug(f"Destroying widget with virtual index={widget.index} !")
-            del self.widgets[widget.index]
+            del self._widgets[widget.index]
             
-            for widget in self.widgets[widget.index:]:
+            for widget in self._widgets[widget.index:]:
                 
                 if isinstance(widget.index, int) and widget.index >= 0:
                     widget.set_index(widget.index-1)
@@ -215,11 +215,11 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         slice_start = 0
         slice_end = 0
         page_data = []
-        widgets_count = len(self.widgets)
+        widgets_count = len(self._widgets)
         self.pages_data.clear()
         self.pages_virtual_row.clear()
         
-        for index, widget in enumerate(self.widgets):
+        for index, widget in enumerate(self._widgets):
             widget.set_index(index)
             widget.set_pages_widgets_handler(self)
             
@@ -266,7 +266,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         if len(self.pages_data) > 0:
             self.switch_to_page(0)
         
-    def _generate_pages_buttons(self, pages_indexes: list|tuple, format_last_button: bool=True):
+    def _generate_pages_buttons(self, pages_indexes: list|tuple):
         """
         Generates buttons for pages switching\n
         All previous button in the layout will be cleared !
@@ -285,11 +285,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             button = QtWidgets.QPushButton(f"{index+1}")
             button.clicked.connect(lambda qt_arg, i=index: self.switch_to_page(i))
             button.setSizePolicy(self.fixed_size_policy)
-            
-            if format_last_button and index == pages_indexes[-1]:
-                button.setText(f". . . {index+1}")
-                button.setObjectName("last_page_b")
-                
             self.pages_numbers_widget_lyt.addWidget(button)
             self.pages_numbers_lyt_widgets.append(button)
             
@@ -313,17 +308,17 @@ class WidgetsPaginationView(QtWidgets.QWidget):
                 self.switch_to_page(given_input-1)
                 
             else:
-                self.logger.error(f"Couldn't switch to page (index={given_input}) : Invalid page index !")
+                raise ValueError("Invalid page index !")
                 
         else:
-            self.logger.error(f"Couldn't switch to page (index={given_input}) : Invalid page index !")
+            raise ValueError("Invalid page index !")
                                 
         
     def get_widgets_with_slice(self, slice: tuple[int, int]) -> list[InPageWidget]:
         """
         Get and return all the widget which are contained inside 'slice'
         """
-        return self.widgets[slice[0]:slice[1]]
+        return self._widgets[slice[0]:slice[1]]
         
     def new_page(self, page_data: list):
         """
@@ -430,19 +425,19 @@ class Page(QtWidgets.QWidget):
         super().__init__(pages_widgets_handler)
         self.logger = logging.getLogger(__name__)
         self.pages_widgets_handler = pages_widgets_handler
-        self.widgets_slice = widgets_slice
+        self._widgets_slice = widgets_slice
         self.virtual_index = virtual_index
 
         self.setProperty("role", "page")
         self.main_layout = QtWidgets.QGridLayout(self)
         self.setLayout(self.main_layout)
 
-        self.widgets_container = QtWidgets.QWidget(self)
-        self.widgets_container_layout = QtWidgets.QVBoxLayout(self.widgets_container)
-        self.widgets_container.setLayout(self.widgets_container_layout)
+        self._widgets_container = QtWidgets.QWidget(self)
+        self._widgets_container_layout = QtWidgets.QVBoxLayout(self._widgets_container)
+        self._widgets_container.setLayout(self._widgets_container_layout)
         self.scroll_area = QtWidgets.QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setWidget(self.widgets_container)
+        self.scroll_area.setWidget(self._widgets_container)
 
         self.main_layout.addWidget(self.scroll_area, 3, 0)
         self.place_widgets()
@@ -460,11 +455,11 @@ class Page(QtWidgets.QWidget):
         
     def place_widgets(self):
         
-        for widget in self.pages_widgets_handler.get_widgets_with_slice(self.widgets_slice):
-            self.widgets_container_layout.addWidget(widget)
+        for widget in self.pages_widgets_handler.get_widgets_with_slice(self._widgets_slice):
+            self._widgets_container_layout.addWidget(widget)
             
     def deleteLater(self):
-        for widget in self.pages_widgets_handler.get_widgets_with_slice(self.widgets_slice):
+        for widget in self.pages_widgets_handler.get_widgets_with_slice(self._widgets_slice):
             widget.setParent(None)
         
         return super().deleteLater()
