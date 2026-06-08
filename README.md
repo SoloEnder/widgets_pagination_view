@@ -74,3 +74,9 @@ python -m pip install widgets_pagination_view
 This project requires the following packages (they will be installed automatically):
 
 - PySide6
+
+## About
+
+This project is developed by [SoloEnder](https://github.com/SoloEnderunder) under the MIT Licence.
+- [**HomePage**](https://github.com/SoloEnder/widgets_pagination_view)
+- [**Issues Page**](https://github.com/SoloEnder/widgets_pagination_view/issues)
