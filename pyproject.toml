@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "widgets_pagination_view"
-version = "0.0.1"
+version = "1.0.0"
 dependencies = [
     "PySide6"
 ]
@@ -24,4 +24,4 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/SoloEnder/widgets_pagination_view"
 Repository = "https://github.com/SoloEnder/widgets_pagination_view"
-"Bug Tracker" = "https://github.com/SoloEnder/widgets_pagination_view/issues"
+Issues = "https://github.com/SoloEnder/widgets_pagination_view/issues"
