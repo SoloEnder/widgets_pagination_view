@@ -2,7 +2,7 @@ import logging
 from PySide6 import QtCore, QtWidgets
 import typing
 
-from .exceptions import PageNotLoadedError, InvalidWidgetIndexError
+from .exceptions import PageNotLoadedError, InvalidWidgetIndexError, WidgetNotFoundError
 
 type InPageWidgetsList = list[InPageWidget,]
 def dynamic_pages_switching(func):
@@ -127,7 +127,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self._widgets = widgets
         self.generate_pages()
         
-    def delete_widget(self, widget: InPageWidget, destroy: bool=True):
+    def delete_widget(self, widget: InPageWidget):
         page_destroyed_index = None
             
         for page in self.loaded_pages.copy():
@@ -135,7 +135,12 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
         if isinstance(widget.index, int):
             self.logger.debug(f"Destroying widget with virtual index={widget.index} !")
-            del self._widgets[widget.index]
+            
+            if self._widgets[widget.index] == widget:
+                del self._widgets[widget.index]
+                
+            else:
+                raise WidgetNotFoundError(widget)
             
             for widget in self._widgets[widget.index:]:
                 
@@ -176,7 +181,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
     def remove_page(self, page_index, re_setup: bool=True, ignore_unload_error: bool=True):
         """
-        Removes the page and his data at 'page_index' in the 'virtual_row' attribute
+        Removes the page and its data at 'page_index' in the 'virtual_row' attribute
         
         Args:
         - page_index: the page index

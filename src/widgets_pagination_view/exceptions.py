@@ -12,6 +12,19 @@ class InvalidWidgetIndexError(Exception):
     def __str__(self) -> str:
         return self.msg
     
+class WidgetNotFoundError(Exception):
+    
+    def __init__(self, widget, msg: str|None=None):
+        """
+        Exception usually raised when an widget is not recognized as a part of the WidgetPaginationView
+        """
+        self.widget = widget
+        self.msg = msg or f"Widget ({widget}) not found in the WidgetsPaginationView !"
+        super().__init__(self.msg)
+
+    def __str__(self) -> str:
+        return self.msg
+    
 class PageNotLoadedError(Exception):
 
     def __init__(self, index, msg: str|None=None):
