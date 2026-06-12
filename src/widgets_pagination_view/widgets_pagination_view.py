@@ -20,7 +20,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
 
         #Assigning arguments to attr
         self._widgets_by_page_count = widgets_by_page_count
-        self._max_loadables_pages_count = max_loadables_pages_count
+        self.max_loadables_pages_count = max_loadables_pages_count
         self._widgets = widgets
         self.config = config
         
@@ -250,9 +250,9 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
         self.setup_pages_slices()
         
-        self.logger.info(f"Generating {self._max_loadables_pages_count} pages...")
+        self.logger.info(f"Generating {self.max_loadables_pages_count} pages...")
         
-        for page_data in self.pages_data[:self._max_loadables_pages_count]:
+        for page_data in self.pages_data[:self.max_loadables_pages_count]:
             self.new_page(page_data)
         
         pages_data_count = len(self.pages_data)
@@ -384,7 +384,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         This method check if the loaded pages count exceed the value of 'max_loadables_pages_count', and unload the exceeding pages if this is the case\n
         Pages to unload are determined by their position in the 'loaded_pages' attribute : first to last.
         """
-        exceeding_pages = self.loaded_pages[:-self._max_loadables_pages_count]
+        exceeding_pages = self.loaded_pages[:-self.max_loadables_pages_count]
         
         if exceeding_pages:
             self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
