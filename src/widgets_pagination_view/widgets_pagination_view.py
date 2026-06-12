@@ -5,26 +5,7 @@ import typing
 from .exceptions import PageNotLoadedError, InvalidWidgetIndexError, WidgetNotFoundError
 
 type InPageWidgetsList = list[InPageWidget,]
-def dynamic_pages_switching(func):
-    """
-    Wrapper of the 'PagesWidgetsHandler.switch_to_page' method\n
-    When the numbers of loaded pages exceed 'PagesWidgetsHandler.max_loadables_pages_count', all exceeding pages are automaticaly unloaded\n
-    The use of this wrapper may improves the performances
-    """
 
-    def wrapper(self: WidgetsPaginationView, page_index):
-
-        func(self, page_index)
-        exceeding_pages = self.loaded_pages[:-self._max_loadables_pages_count]
-
-        if exceeding_pages:
-            self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
-            
-            for exceeding_page in exceeding_pages:
-                self.unload_page(exceeding_page)
-
-    return wrapper
-       
 class WidgetsPaginationView(QtWidgets.QWidget):        
         
     def __init__(
@@ -353,7 +334,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.pages_virtual_row[page.virtual_index] = page
         self.loaded_pages.append(page)
         
-    @dynamic_pages_switching
     def switch_to_page(self, index: int, make_page: bool=True):
         """
         Set the page displayed to the one's at 'index' int the 'pages_virtual_row' attribute
@@ -386,6 +366,21 @@ class WidgetsPaginationView(QtWidgets.QWidget):
                 
             else:
                 raise PageNotLoadedError(index)
+        self.smart_unload()
+                
+    def smart_unload(self):
+        """
+        This method check if the loaded pages count exceed the value of 'max_loadables_pages_count', and unload the exceeding pages if this is the case\n
+        Pages to unload are determined by their position in the 'loaded_pages' attribute : first to last.
+        """
+        exceeding_pages = self.loaded_pages[:-self._max_loadables_pages_count]
+        
+        if exceeding_pages:
+            self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
+            
+            for exceeding_page in exceeding_pages:
+                self.unload_page(exceeding_page)
+        
         
     def unload_page_with_index(self, index: int):
         """
