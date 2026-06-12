@@ -5,33 +5,7 @@ import typing
 from .exceptions import PageNotLoadedError, InvalidWidgetIndexError, WidgetNotFoundError
 
 type InPageWidgetsList = list[InPageWidget,]
-def dynamic_pages_switching(func):
-    """
-    Wrapper of the 'PagesWidgetsHandler.switch_to_page' method\n
-    When the numbers of loaded pages exceed 'PagesWidgetsHandler.max_loadables_pages_count', all exceeding pages are automaticaly unloaded\n
-    The use of this wrapper may improves the performances
-    """
 
-    def wrapper(self: WidgetsPaginationView, page_index):
-
-        func(self, page_index)
-        exceeding_pages = self.loaded_pages[:-self.max_loadables_pages_count]
-
-        if exceeding_pages:
-            self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
-            
-            for exceeding_page in exceeding_pages:
-                self.unload_page(exceeding_page)
-
-    return wrapper
-
-def dynamic_pages_loader(func):
-
-    def wrapper(self: WidgetsPaginationView):
-        func(self, self.pages_data[:2])
-
-    return wrapper
-       
 class WidgetsPaginationView(QtWidgets.QWidget):        
         
     def __init__(
@@ -45,7 +19,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         super().__init__(parent)
 
         #Assigning arguments to attr
-        self.widgets_by_page_count = widgets_by_page_count
+        self._widgets_by_page_count = widgets_by_page_count
         self.max_loadables_pages_count = max_loadables_pages_count
         self._widgets = widgets
         self.config = config
@@ -68,12 +42,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         
         #The stacked widget which handle the widgets
         self.pages_widgets_sw = QtWidgets.QStackedWidget(self)
-        self.nothing_page = NothingToShowPage(None)
-        self.pages_widgets_sw.addWidget(self.nothing_page)
-        
-        #Loading page
-        self.loading_page = LoadingPage(None)
-        self.pages_widgets_sw.addWidget(self.loading_page)
         
         #Widgets for pages numbers buttons
         self.pages_numbers_widget = QtWidgets.QWidget(self)
@@ -97,6 +65,49 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.generate_pages()
         self._apply_config()
         
+    @property
+    def widgets(self):
+        """
+        Getter of property 'widgets'
+        """
+        return self._widgets
+
+    @widgets.setter
+    def widgets(self, new_widgets: InPageWidgetsList):
+        """
+        Setter of property 'widgets'
+        """
+        
+        for page_data in self.pages_data.copy():
+            self.remove_page(page_data[0])
+            
+        self.pages_switch_history.clear()
+        self._widgets = new_widgets
+        self.generate_pages()
+        
+    @widgets.deleter
+    def widgets(self):
+        """
+        Empty the widgets list
+        """
+        
+        self._widgets = []
+                
+    @property
+    def widgets_by_pages_count(self):
+        return self._widgets_by_page_count
+    
+    @widgets_by_pages_count.setter
+    def widgets_by_pages_count(self, new_value):
+        """
+        Setter of property 'widgets_by_pages_count'
+        """
+        
+        self._widgets_by_page_count = new_value
+        self.setup_pages_slices()
+        self.generate_pages()
+        self._widgets_by_page_count = new_value
+    
     def _apply_config(self):
         for page_button in self.pages_numbers_lyt_widgets:
             page_button.setVisible(self._switch_page_buttons_enabled)
@@ -114,18 +125,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         
         for page_data in self.pages_data:
             self.pages_virtual_row.append(None)
-        
-    def set_widgets(self, widgets: InPageWidgetsList):
-        """
-        Set the attribute 'widgets' to 'widgets'
-        """
-        
-        for page_data in self.pages_data.copy():
-            self.remove_page(page_data[0])
-            
-        self.pages_switch_history.clear()
-        self._widgets = widgets
-        self.generate_pages()
         
     def delete_widget(self, widget: InPageWidget):
         page_destroyed_index = None
@@ -228,7 +227,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             widget.set_index(index)
             widget.set_pages_widgets_handler(self)
             
-            if (index+1) % self.widgets_by_page_count == 0:
+            if (index+1) % self._widgets_by_page_count == 0:
                 slice_start = slice_end
                 slice_end = index+1
                 page_data = [current_page_index, (slice_start, slice_end)]
@@ -350,7 +349,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.pages_virtual_row[page.virtual_index] = page
         self.loaded_pages.append(page)
         
-    @dynamic_pages_switching
     def switch_to_page(self, index: int, make_page: bool=True):
         """
         Set the page displayed to the one's at 'index' int the 'pages_virtual_row' attribute
@@ -366,7 +364,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.logger.debug(f"Switching to page with index={index}")
         
         if not len(self.pages_virtual_row) or index+1 > len(self.pages_virtual_row):
-            self.show_nothing_page()
             return
         
         dest_page = self.pages_virtual_row[index]
@@ -384,6 +381,21 @@ class WidgetsPaginationView(QtWidgets.QWidget):
                 
             else:
                 raise PageNotLoadedError(index)
+        self.smart_unload()
+                
+    def smart_unload(self):
+        """
+        This method check if the loaded pages count exceed the value of 'max_loadables_pages_count', and unload the exceeding pages if this is the case\n
+        Pages to unload are determined by their position in the 'loaded_pages' attribute : first to last.
+        """
+        exceeding_pages = self.loaded_pages[:-self.max_loadables_pages_count]
+        
+        if exceeding_pages:
+            self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
+            
+            for exceeding_page in exceeding_pages:
+                self.unload_page(exceeding_page)
+        
         
     def unload_page_with_index(self, index: int):
         """
@@ -413,12 +425,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.pages_widgets_sw.removeWidget(page)
         self.pages_virtual_row[page.virtual_index] = None
         page.deleteLater()
-        
-    def show_nothing_page(self):
-        self.pages_widgets_sw.setCurrentWidget(self.nothing_page)
-        
-    def show_loading_page(self):
-        self.pages_widgets_sw.setCurrentWidget(self.loading_page)
                       
 class Page(QtWidgets.QWidget):
     def __init__(
@@ -469,33 +475,6 @@ class Page(QtWidgets.QWidget):
         
         return super().deleteLater()
         
-class NothingToShowPage(QtWidgets.QWidget):
-    
-    def __init__(self, parent: QtWidgets.QWidget|None):
-        super().__init__(parent)
-        self.nothing_to_show_widget_lyt = QtWidgets.QHBoxLayout()
-        self.setLayout(self.nothing_to_show_widget_lyt)
-        self.nothing_to_show_lb = QtWidgets.QLabel(self)
-        self.nothing_to_show_lb.setText("Il n'y a rien ici")
-        self.nothing_to_show_lb.setProperty("role", "nothing_to_show_lb")
-        self.nothing_to_show_widget_lyt.addWidget(self.nothing_to_show_lb, QtCore.Qt.AlignmentFlag.AlignCenter)
-        
-    def set_label_text(self, new_text: str):
-        self.nothing_to_show_lb.setText(new_text)
-        
-class LoadingPage(QtWidgets.QWidget):
-    
-    def __init__(self, parent: QtWidgets.QWidget|None):
-        super().__init__(parent)
-        self.lyt = QtWidgets.QHBoxLayout()
-        self.setLayout(self.lyt)
-        self.loading_lb = QtWidgets.QLabel(self)
-        self.loading_lb.setText("Chargement...")
-        self.lyt.addWidget(self.loading_lb, QtCore.Qt.AlignmentFlag.AlignCenter)
-        
-    def set_label_text(self, new_text: str):
-        self.loading_lb.setText(new_text)
-        
 class InPageWidget(QtWidgets.QWidget):
     
     def __init__(self, pages_widgets_handler: WidgetsPaginationView|None=None, index: int|None=None):
@@ -503,16 +482,16 @@ class InPageWidget(QtWidgets.QWidget):
         self.index = index
         self.pages_widgets_handler = pages_widgets_handler
         
-    def set_pages_widgets_handler(self, pages_widgets_handler: WidgetsPaginationView):
+    def set_pages_widgets_handler(self, new_pages_widgets_handler: WidgetsPaginationView):
         """
-        Setter of attribute 'pages_widgets_handler'
+        Set the attribute 'pages_widgets_handler' to 'new_pages_widgets_handler''
         """
         
-        self.pages_widgets_handler = pages_widgets_handler
+        self.pages_widgets_handler = new_pages_widgets_handler
         
-    def set_index(self, index: int):
+    def set_index(self, new_index: int):
         """
-        Setter of attribute 'index'
+        Set the attribute 'index' to 'new_index'
         """
-        self.index = index
+        self.index = new_index
         
