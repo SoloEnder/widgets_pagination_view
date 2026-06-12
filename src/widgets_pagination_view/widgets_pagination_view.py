@@ -15,20 +15,13 @@ def dynamic_pages_switching(func):
     def wrapper(self: WidgetsPaginationView, page_index):
 
         func(self, page_index)
-        exceeding_pages = self.loaded_pages[:-self.max_loadables_pages_count]
+        exceeding_pages = self.loaded_pages[:-self._max_loadables_pages_count]
 
         if exceeding_pages:
             self.logger.debug(f"Unloading {len(exceeding_pages)} exceedings pages, indexes={[exceeding_page.virtual_index for exceeding_page in exceeding_pages]}")
             
             for exceeding_page in exceeding_pages:
                 self.unload_page(exceeding_page)
-
-    return wrapper
-
-def dynamic_pages_loader(func):
-
-    def wrapper(self: WidgetsPaginationView):
-        func(self, self.pages_data[:2])
 
     return wrapper
        
@@ -45,8 +38,8 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         super().__init__(parent)
 
         #Assigning arguments to attr
-        self.widgets_by_page_count = widgets_by_page_count
-        self.max_loadables_pages_count = max_loadables_pages_count
+        self._widgets_by_page_count = widgets_by_page_count
+        self._max_loadables_pages_count = max_loadables_pages_count
         self._widgets = widgets
         self.config = config
         
@@ -222,7 +215,7 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             widget.set_index(index)
             widget.set_pages_widgets_handler(self)
             
-            if (index+1) % self.widgets_by_page_count == 0:
+            if (index+1) % self._widgets_by_page_count == 0:
                 slice_start = slice_end
                 slice_end = index+1
                 page_data = [current_page_index, (slice_start, slice_end)]
@@ -239,12 +232,19 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
     def set_widgets_by_pages_count(self, new_value: int):
         """
-        Edit the widgets_by_pages_count and refresh the pages widgets
+        Edit the widgets_by_pages_count attribute and refresh the pages widgets
         """
         
-        self.widgets_by_page_count = new_value
+        self._widgets_by_page_count = new_value
         self.setup_pages_slices()
         self.generate_pages()
+        
+    def set_max_loadables_pages_count(self, new_value: int):
+        """
+        Edit the max_loadables_pages_count attribute value, without applying the change (the current loaded pages count will not change)
+        """
+        
+        self._max_loadables_pages_count = new_value
         
     def generate_pages(self):
         """
@@ -258,9 +258,9 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             
         self.setup_pages_slices()
         
-        self.logger.info(f"Generating {self.max_loadables_pages_count} pages...")
+        self.logger.info(f"Generating {self._max_loadables_pages_count} pages...")
         
-        for page_data in self.pages_data[:self.max_loadables_pages_count]:
+        for page_data in self.pages_data[:self._max_loadables_pages_count]:
             self.new_page(page_data)
         
         pages_data_count = len(self.pages_data)
