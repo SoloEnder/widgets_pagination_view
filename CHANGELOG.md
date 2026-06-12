@@ -1,5 +1,5 @@
 
-## v1.0.1 (12/06/26)
+## v1.1.0 (12/06/26)
 
 ### Fix:
 - Removed the nothing to show and the loading page
