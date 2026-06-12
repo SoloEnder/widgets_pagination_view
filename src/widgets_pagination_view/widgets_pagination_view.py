@@ -65,6 +65,45 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.generate_pages()
         self._apply_config()
         
+    @property
+    def widgets(self):
+        """
+        Getter of property 'widgets'
+        """
+        return self._widgets
+
+    @widgets.setter
+    def widgets(self, new_widgets: InPageWidgetsList):
+        """
+        Setter of property 'widgets'
+        """
+        
+        for page_data in self.pages_data.copy():
+            self.remove_page(page_data[0])
+            
+        self.pages_switch_history.clear()
+        self._widgets = new_widgets
+        self.generate_pages()
+        
+    @widgets.deleter
+    def widgets(self):
+        self._widgets = []
+                
+    @property
+    def widgets_by_pages_count(self):
+        return self._widgets_by_page_count
+    
+    @widgets_by_pages_count.setter
+    def widgets_by_pages_count(self, new_value):
+        """
+        Setter of property 'widgets_by_pages_count'
+        """
+        
+        self._widgets_by_page_count = new_value
+        self.setup_pages_slices()
+        self.generate_pages()
+        self._widgets_by_page_count = new_value
+    
     def _apply_config(self):
         for page_button in self.pages_numbers_lyt_widgets:
             page_button.setVisible(self._switch_page_buttons_enabled)
@@ -82,18 +121,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         
         for page_data in self.pages_data:
             self.pages_virtual_row.append(None)
-        
-    def set_widgets(self, widgets: InPageWidgetsList):
-        """
-        Set the attribute 'widgets' to 'widgets'
-        """
-        
-        for page_data in self.pages_data.copy():
-            self.remove_page(page_data[0])
-            
-        self.pages_switch_history.clear()
-        self._widgets = widgets
-        self.generate_pages()
         
     def delete_widget(self, widget: InPageWidget):
         page_destroyed_index = None
@@ -210,22 +237,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             page_data = [current_page_index, (slice_start, slice_end)]
             self.pages_data.append(page_data.copy())
             self.pages_virtual_row.append(None)
-            
-    def set_widgets_by_pages_count(self, new_value: int):
-        """
-        Edit the widgets_by_pages_count attribute and refresh the pages widgets
-        """
-        
-        self._widgets_by_page_count = new_value
-        self.setup_pages_slices()
-        self.generate_pages()
-        
-    def set_max_loadables_pages_count(self, new_value: int):
-        """
-        Edit the max_loadables_pages_count attribute value, without applying the change (the current loaded pages count will not change)
-        """
-        
-        self._max_loadables_pages_count = new_value
         
     def generate_pages(self):
         """
