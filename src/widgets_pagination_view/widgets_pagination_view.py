@@ -68,12 +68,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         
         #The stacked widget which handle the widgets
         self.pages_widgets_sw = QtWidgets.QStackedWidget(self)
-        self.nothing_page = NothingToShowPage(None)
-        self.pages_widgets_sw.addWidget(self.nothing_page)
-        
-        #Loading page
-        self.loading_page = LoadingPage(None)
-        self.pages_widgets_sw.addWidget(self.loading_page)
         
         #Widgets for pages numbers buttons
         self.pages_numbers_widget = QtWidgets.QWidget(self)
@@ -366,7 +360,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.logger.debug(f"Switching to page with index={index}")
         
         if not len(self.pages_virtual_row) or index+1 > len(self.pages_virtual_row):
-            self.show_nothing_page()
             return
         
         dest_page = self.pages_virtual_row[index]
@@ -413,12 +406,6 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         self.pages_widgets_sw.removeWidget(page)
         self.pages_virtual_row[page.virtual_index] = None
         page.deleteLater()
-        
-    def show_nothing_page(self):
-        self.pages_widgets_sw.setCurrentWidget(self.nothing_page)
-        
-    def show_loading_page(self):
-        self.pages_widgets_sw.setCurrentWidget(self.loading_page)
                       
 class Page(QtWidgets.QWidget):
     def __init__(
@@ -469,33 +456,6 @@ class Page(QtWidgets.QWidget):
         
         return super().deleteLater()
         
-class NothingToShowPage(QtWidgets.QWidget):
-    
-    def __init__(self, parent: QtWidgets.QWidget|None):
-        super().__init__(parent)
-        self.nothing_to_show_widget_lyt = QtWidgets.QHBoxLayout()
-        self.setLayout(self.nothing_to_show_widget_lyt)
-        self.nothing_to_show_lb = QtWidgets.QLabel(self)
-        self.nothing_to_show_lb.setText("Il n'y a rien ici")
-        self.nothing_to_show_lb.setProperty("role", "nothing_to_show_lb")
-        self.nothing_to_show_widget_lyt.addWidget(self.nothing_to_show_lb, QtCore.Qt.AlignmentFlag.AlignCenter)
-        
-    def set_label_text(self, new_text: str):
-        self.nothing_to_show_lb.setText(new_text)
-        
-class LoadingPage(QtWidgets.QWidget):
-    
-    def __init__(self, parent: QtWidgets.QWidget|None):
-        super().__init__(parent)
-        self.lyt = QtWidgets.QHBoxLayout()
-        self.setLayout(self.lyt)
-        self.loading_lb = QtWidgets.QLabel(self)
-        self.loading_lb.setText("Chargement...")
-        self.lyt.addWidget(self.loading_lb, QtCore.Qt.AlignmentFlag.AlignCenter)
-        
-    def set_label_text(self, new_text: str):
-        self.loading_lb.setText(new_text)
-        
 class InPageWidget(QtWidgets.QWidget):
     
     def __init__(self, pages_widgets_handler: WidgetsPaginationView|None=None, index: int|None=None):
@@ -503,16 +463,16 @@ class InPageWidget(QtWidgets.QWidget):
         self.index = index
         self.pages_widgets_handler = pages_widgets_handler
         
-    def set_pages_widgets_handler(self, pages_widgets_handler: WidgetsPaginationView):
+    def set_pages_widgets_handler(self, new_pages_widgets_handler: WidgetsPaginationView):
         """
-        Setter of attribute 'pages_widgets_handler'
+        Set the attribute 'pages_widgets_handler' to 'new_pages_widgets_handler''
         """
         
-        self.pages_widgets_handler = pages_widgets_handler
+        self.pages_widgets_handler = new_pages_widgets_handler
         
-    def set_index(self, index: int):
+    def set_index(self, new_index: int):
         """
-        Setter of attribute 'index'
+        Set the attribute 'index' to 'new_index'
         """
-        self.index = index
+        self.index = new_index
         
