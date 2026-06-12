@@ -87,6 +87,10 @@ class WidgetsPaginationView(QtWidgets.QWidget):
         
     @widgets.deleter
     def widgets(self):
+        """
+        Empty the widgets list
+        """
+        
         self._widgets = []
                 
     @property
