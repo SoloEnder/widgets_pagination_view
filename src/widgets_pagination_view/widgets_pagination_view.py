@@ -236,6 +236,15 @@ class WidgetsPaginationView(QtWidgets.QWidget):
             page_data = [current_page_index, (slice_start, slice_end)]
             self.pages_data.append(page_data.copy())
             self.pages_virtual_row.append(None)
+            
+    def set_widgets_by_pages_count(self, new_value: int):
+        """
+        Edit the widgets_by_pages_count and refresh the pages widgets
+        """
+        
+        self.widgets_by_page_count = new_value
+        self.setup_pages_slices()
+        self.generate_pages()
         
     def generate_pages(self):
         """
