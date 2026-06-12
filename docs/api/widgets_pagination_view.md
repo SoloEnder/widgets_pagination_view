@@ -27,3 +27,5 @@ Deletes the widgets page located at `page_index`
 - `re_setup: bool=True`: Indicates whether to call the `setup_pages_slices` method which distributes the widgets across the different pages
 - `ignore_unload_error`: Since this method will attempt to unload the page with 'page_index', without checking if the page is actually loaded, this argument indicates whether to raise or ignore the `PageNotFoundError` exception raised when attempting to unload an unloaded page.
 
+#### `setup_pages_slice(self)`
+Distributes the widgets across the differents page, without refreshing them. You generally have no reason to call this method, if you want to update the widgets distribution AND refresh the pages, you should call the `generate_pages(self)` method instead.
