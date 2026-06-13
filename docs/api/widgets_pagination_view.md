@@ -29,3 +29,6 @@ Deletes the widgets page located at `page_index`
 
 #### `setup_pages_slice(self)`
 Distributes the widgets across the differents page, without refreshing them. You generally have no reason to call this method, if you want to update the widgets distribution AND refresh the pages, you should call the `generate_pages(self)` method instead.
+
+### `generate_pages(self)`
+Distributes the widgets across the differents page, and create or update them. Automatically called by `__init__(self)`. This method also created the pages numbers displayed at the bottom.
