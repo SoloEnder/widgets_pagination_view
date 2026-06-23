@@ -7,4 +7,12 @@
 ## Refactor:
 - removed the unused `dynamic_pages_loader` wrapper
 - the role of the deleted `dynamic_pages_switching` is now handled by the `smart_unload` method
-- the `max_loadables_pages_count`, `widgets` are now property
+- `max_loadables_pages_count` and `widgets` are now property
+
+## v1.1.1
+### Fix:
+- a bug where a type hint was created before the declaration of the class type
+- removed type alias on type declaration
+
+### Refactor:
+- removed unused imports
