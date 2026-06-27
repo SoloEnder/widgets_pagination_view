@@ -16,3 +16,7 @@
 
 ### Refactor:
 - removed unused imports
+
+## 1.1.2
+### Fix:
+- a bug that caused the license file to no be include in distributions files
