@@ -20,3 +20,7 @@
 ## 1.1.2
 ### Fix:
 - a bug that caused the license file to no be include in distributions files
+
+## 1.1.3
+### Docs
+- added third party notice and licenses
